@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBudget - Personal Finance Manager</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-wallet logo-icon"></i>
+                <span class="logo-text">SmartBudget</span>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" onclick="navigateTo('dashboard')">
+                    <i class="fas fa-home"></i> Dashboard
+                </li>
+                <li class="nav-item" onclick="navigateTo('transactions')">
+                    <i class="fas fa-exchange-alt"></i> Transactions
+                </li>
+                <li class="nav-item" onclick="navigateTo('budget')">
+                    <i class="fas fa-chart-pie"></i> Budget Planner
+                </li>
+                <li class="nav-item" onclick="navigateTo('savings')">
+                    <i class="fas fa-piggy-bank"></i> Savings Goals
+                </li>
+                <li class="nav-item" onclick="navigateTo('debts')">
+                    <i class="fas fa-hand-holding-usd"></i> Debt Manager
+                </li>
+                <li class="nav-item" onclick="navigateTo('reports')">
+                    <i class="fas fa-file-invoice-dollar"></i> Reports
+                </li>
+                <li class="nav-item" onclick="navigateTo('settings')">
+                    <i class="fas fa-cog"></i> Settings
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                &copy; 2026 SmartBudget<br>Data stored locally
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <h2 id="page-title" style="font-size: 18px; font-weight: 600;">Dashboard</h2>
+                <div class="header-right">
+                    <div class="user-profile">
+                        <div class="avatar">U</div>
+                        <span style="font-size: 14px; font-weight: 500;">User Profile</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="dashboard" class="view-section active">
+                <div class="flex-between mb-4">
+                    <h3 class="section-title" style="margin-bottom: 0;">Financial Overview</h3>
+                    <select id="dashboard-period" class="form-control" style="width: auto;" onchange="updateDashboard()">
+                        <option value="current">This Month</option>
+                        <option value="last">Last Month</option>
+                    </select>
+                </div>
+
+                <div class="grid-container">
+                    <div class="card stat-card">
+                        <div class="flex-between">
+                            <span class="stat-label">Available Balance</span>
+                            <i class="fas fa-wallet stat-icon text-blue"></i>
+                        </div>
+                        <div class="stat-value" id="dash-balance">KSh 0.00</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="flex-between">
+                            <span class="stat-label">Monthly Income</span>
+                            <i class="fas fa-arrow-up stat-icon text-green"></i>
+                        </div>
+                        <div class="stat-value text-green" id="dash-income">KSh 0.00</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="flex-between">
+                            <span class="stat-label">Monthly Expenses</span>
+                            <i class="fas fa-arrow-down stat-icon text-red"></i>
+                        </div>
+                        <div class="stat-value text-red" id="dash-expenses">KSh 0.00</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="flex-between">
+                            <span class="stat-label">Total Savings</span>
+                            <i class="fas fa-piggy-bank stat-icon text-blue"></i>
+                        </div>
+                        <div class="stat-value" id="dash-savings">KSh 0.00</div>
+                    </div>
+                </div>
+
+                <div class="grid-container" style="grid-template-columns: 2fr 1fr;">
+                    <div class="card">
+                        <h4 style="margin-bottom: 15px;">Income vs Expenses</h4>
+                        <canvas id="mainChart" height="200"></canvas>
+                    </div>
+                    <div class="card">
+                        <h4 style="margin-bottom: 15px;">Spending by Category</h4>
+                        <canvas id="categoryChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4 style="margin-bottom: 15px;">Recent Transactions</h4>
+                    <div class="table-container" style="box-shadow: none; margin-bottom: 0;">
+                        <table id="recent-transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transactions View -->
+            <section id="transactions" class="view-section">
+                <div class="flex-between mb-4">
+                    <h3 class="section-title" style="margin-bottom: 0;">All Transactions</h3>
+                    <button class="btn btn-primary" onclick="openModal('transactionModal')">
+                        <i class="fas fa-plus"></i> Add Transaction
+                    </button>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="grid-container" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 0; gap: 10px;">
+                        <input type="text" id="search-trans" class="form-control" placeholder="Search description..." onkeyup="renderTransactions()">
+                        <select id="filter-type" class="form-control" onchange="renderTransactions()">
+                            <option value="all">All Types</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                        <select id="filter-category" class="form-control" onchange="renderTransactions()">
+                            <option value="all">All Categories</option>
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="all-transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Payment Method</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Budget View -->
+            <section id="budget" class="view-section">
+                <div class="flex-between mb-4">
+                    <h3 class="section-title" style="margin-bottom: 0;">Budget Planner</h3>
+                    <button class="btn btn-primary" onclick="openModal('budgetModal')">
+                        <i class="fas fa-plus"></i> Set Budget Limit
+                    </button>
+                </div>
+
+                <div class="grid-container" id="budget-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Savings View -->
+            <section id="savings" class="view-section">
+                <div class="flex-between mb-4">
+                    <h3 class="section-title" style="margin-bottom: 0;">Savings Goals</h3>
+                    <button class="btn btn-primary" onclick="openModal('savingsModal')">
+                        <i class="fas fa-plus"></i> New Goal
+                    </button>
+                </div>
+
+                <div class="grid-container" id="savings-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Debts View -->
+            <section id="debts" class="view-section">
+                <div class="flex-between mb-4">
+                    <h3 class="section-title" style="margin-bottom: 0;">Debt Manager</h3>
+                    <button class="btn btn-primary" onclick="openModal('debtModal')">
+                        <i class="fas fa-plus"></i> Add Debt
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table id="debts-table">
+                        <thead>
+                            <tr>
+                                <th>Person/Org</th>
+                                <th>Type</th>
+                                <th>Total Amount</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Reports View -->
+            <section id="reports" class="view-section">
+                <h3 class="section-title">Financial Reports</h3>
+                
+                <div class="grid-container">
+                    <div class="card">
+                        <h4>Monthly Trend (Last 6 Months)</h4>
+                        <canvas id="trendChart" height="200"></canvas>
+                    </div>
+                    <div class="card">
+                        <h4>Budget Performance</h4>
+                        <canvas id="budgetPerformanceChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="flex-between">
+                        <h4>Summary Statistics</h4>
+                        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+                            <i class="fas fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                    <div class="grid-container mt-4" style="margin-bottom: 0;">
+                        <div>
+                            <span class="stat-label">Avg. Daily Spending</span>
+                            <div class="stat-value" id="report-avg-daily">KSh 0.00</div>
+                        </div>
+                        <div>
+                            <span class="stat-label">Highest Spending Category</span>
+                            <div class="stat-value" id="report-top-cat">-</div>
+                        </div>
+                        <div>
+                            <span class="stat-label">Savings Rate</span>
+                            <div class="stat-value" id="report-savings-rate">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="settings" class="view-section">
+                <h3 class="section-title">Settings</h3>
+                
+                <div class="card mb-4">
+                    <h4>Data Management</h4>
+                    <p style="color: var(--text-gray); margin-bottom: 15px;">Manage your local data. Export regularly to keep backups.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            <i class="fas fa-file-export"></i> Export Data (JSON)
+                        </button>
+                        <label class="btn btn-secondary" style="cursor: pointer;">
+                            <i class="fas fa-file-import"></i> Import Data
+                            <input type="file" id="import-file" style="display: none;" onchange="importData(this)">
+                        </label>
+                        <button class="btn btn-danger" onclick="clearAllData()">
+                            <i class="fas fa-trash"></i> Clear All Data
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4>About SmartBudget</h4>
+                    <p style="color: var(--text-gray); line-height: 1.6;">
+                        SmartBudget is a personal finance manager designed for Kenyan users. 
+                        It helps you track income, expenses, budgets, savings, and debts.
+                        <br><br>
+                        <strong>Privacy Notice:</strong> All data is stored in your browser's LocalStorage. 
+                        No data is sent to any server. If you clear your browser cache, you will lose your data unless you export it first.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Transaction Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Transaction</h3>
+                <span class="close-modal" onclick="closeModal('transactionModal')">&times;</span>
+            </div>
+            <form id="transactionForm" onsubmit="handleTransactionSubmit(event)">
+                <input type="hidden" id="trans-id">
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select id="trans-type" class="form-control" required onchange="updateTransCategories()">
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                        <option value="transfer">Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount (KSh)</label>
+                    <input type="number" id="trans-amount" class="form-control" step="0.01" required min="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="trans-category" class="form-control" required>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" id="trans-date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Method</label>
+                    <select id="trans-method" class="form-control">
+                        <option value="M-Pesa">M-Pesa</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Card">Card</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" id="trans-desc" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea id="trans-notes" class="form-control" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Transaction</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budgetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Set Budget Limit</h3>
+                <span class="close-modal" onclick="closeModal('budgetModal')">&times;</span>
+            </div>
+            <form id="budgetForm" onsubmit="handleBudgetSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="budget-category" class="form-control" required>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Monthly Limit (KSh)</label>
+                    <input type="number" id="budget-amount" class="form-control" step="0.01" required min="1">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Budget</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Savings Modal -->
+    <div id="savingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>New Savings Goal</h3>
+                <span class="close-modal" onclick="closeModal('savingsModal')">&times;</span>
+            </div>
+            <form id="savingsForm" onsubmit="handleSavingsSubmit(event)">
+                <input type="hidden" id="saving-id">
+                <div class="form-group">
+                    <label class="form-label">Goal Name</label>
+                    <input type="text" id="saving-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Amount (KSh)</label>
+                    <input type="number" id="saving-target" class="form-control" step="0.01" required min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Current Saved (KSh)</label>
+                    <input type="number" id="saving-current" class="form-control" step="0.01" required min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Date</label>
+                    <input type="date" id="saving-date" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Goal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Debt Modal -->
+    <div id="debtModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Debt Record</h3>
+                <span class="close-modal" onclick="closeModal('debtModal')">&times;</span>
+            </div>
+            <form id="debtForm" onsubmit="handleDebtSubmit(event)">
+                <input type="hidden" id="debt-id">
+                <div class="form-group">
+                    <label class="form-label">Person / Organization</label>
+                    <input type="text" id="debt-person" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select id="debt-type" class="form-control">
+                        <option value="owed">I Owe (Liability)</option>
+                        <option value="owing">Owes Me (Asset)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Total Amount (KSh)</label>
+                    <input type="number" id="debt-total" class="form-control" step="0.01" required min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount Repaid/Paid So Far (KSh)</label>
+                    <input type="number" id="debt-paid" class="form-control" step="0.01" required min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" id="debt-date" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">Action Successful</div>
+
+    <!-- External JS -->
+    <script src="app.js"></script>
+</body>
+</html>
